@@ -34,16 +34,16 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.ReduxColorSensor;
+// import frc.robot.subsystems.Elevator;
+// import frc.robot.subsystems.ReduxColorSensor;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     public double target = 40;
 
-  private final Elevator elevator1 = new Elevator(1, true);
-  private final Elevator elevator2 = new Elevator(2, false);  
+  // private final Elevator elevator1 = new Elevator(1, true);
+  // private final Elevator elevator2 = new Elevator(2, false);  
 
 
     /* Setting up bindings for necessary control of the swerve drive platform */
@@ -52,7 +52,7 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-    private final ReduxColorSensor colorSensor = new ReduxColorSensor();
+    // private final ReduxColorSensor colorSensor = new ReduxColorSensor();
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
@@ -141,8 +141,8 @@ public class RobotContainer {
 
     // joystick.leftBumper().whileTrue(elevatorUpCommand());
     // joystick.rightBumper().whileTrue(elevatorDownCommand());
-    joystick.leftBumper().whileTrue(elevatorToPostitonCommandDash(75));
-    joystick.rightBumper().whileTrue(elevatorToPostitonCommandDash(35));
+    // joystick.leftBumper().whileTrue(elevatorToPostitonCommandDash(75));
+    // joystick.rightBumper().whileTrue(elevatorToPostitonCommandDash(35));
     // joystick.y().whileTrue(elevatorToPostitonCommandDash());
 
     joystick.a().whileTrue(drivetrain.applyRequest(()->{
@@ -251,31 +251,31 @@ public class RobotContainer {
         return Commands.print("No autonomous command configured");
     }
     
-    public Command elevatorUpCommand(){
-      return new ParallelCommandGroup(
-        elevator1.openLoopCommand(2),
-        elevator2.openLoopCommand(2)
-      );
-    }
+    // public Command elevatorUpCommand(){
+    //   return new ParallelCommandGroup(
+    //     elevator1.openLoopCommand(2),
+    //     elevator2.openLoopCommand(2)
+    //   );
+    // }
 
-    public Command elevatorDownCommand(){
-      return new ParallelCommandGroup(
-        elevator1.openLoopCommand(-0.5),
-        elevator2.openLoopCommand(-0.5)
-      );
-    }
-    public Command elevatorToPostitonCommand(){
-      return new ParallelCommandGroup(
-        elevator1.pidCommand(50),
-        elevator2.pidCommand(50)
-      );
-    }
-    public Command elevatorToPostitonCommandDash(double target){
-      return new ParallelCommandGroup(
-        elevator1.pidCommand(target),
-        elevator2.pidCommand(target)
-      );
-    }
+    // public Command elevatorDownCommand(){
+    //   return new ParallelCommandGroup(
+    //     elevator1.openLoopCommand(-0.5),
+    //     elevator2.openLoopCommand(-0.5)
+    //   );
+    // }
+    // public Command elevatorToPostitonCommand(){
+    //   return new ParallelCommandGroup(
+    //     elevator1.pidCommand(50),
+    //     elevator2.pidCommand(50)
+    //   );
+    // }
+    // public Command elevatorToPostitonCommandDash(double target){
+    //   return new ParallelCommandGroup(
+    //     elevator1.pidCommand(target),
+    //     elevator2.pidCommand(target)
+    //   );
+    // }
 
     public void robotPeriodic() {
       SmartDashboard.putNumber("target", target);
