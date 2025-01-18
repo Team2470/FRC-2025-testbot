@@ -46,7 +46,7 @@ public class Elevator extends SubsystemBase {
   private ControlMode m_controlMode = ControlMode.kStop;
   private final ProfiledPIDController m_pidController = new ProfiledPIDController(ElevatorConstants.kP,
       ElevatorConstants.kI, ElevatorConstants.kD,
-      new TrapezoidProfile.Constraints(24, 24));
+      new TrapezoidProfile.Constraints(50, 150));
 
   private ElevatorFeedforward m_feedforward = new ElevatorFeedforward(ElevatorConstants.kS, ElevatorConstants.kG,
       ElevatorConstants.kV,
@@ -172,21 +172,19 @@ public class Elevator extends SubsystemBase {
         m_pidController.setP(SmartDashboard.getNumber("Elevator kP", ElevatorConstants.kP));
         m_pidController.setI(SmartDashboard.getNumber("Elevator kI", ElevatorConstants.kI));
         m_pidController.setD(SmartDashboard.getNumber("Elevator kD", ElevatorConstants.kD));
+        
+        double PIDoutPutVoltage = m_pidController.calculate(getPosition(), m_demand);
 
         double dt = Timer.getFPGATimestamp() - m_pidLastTime;
         double accelerationSetpoint = (m_pidController.getSetpoint().velocity - m_pidLastVelocitySetpoint) / dt;
-
-        double PIDoutPutVoltage = m_pidController.calculate(getPosition(), m_demand);
         double feedforwardVoltage = m_feedforward.calculate(m_pidController.getSetpoint().velocity,
             accelerationSetpoint);
 
         outputVoltage = PIDoutPutVoltage + feedforwardVoltage;
         SmartDashboard.putNumber("Elevator Pid output voltage", PIDoutPutVoltage);
         SmartDashboard.putNumber("Elevator Feed Fowrad output voltage", feedforwardVoltage);
-        SmartDashboard.putNumber("Elevator PID Profile Position",
-            Math.toDegrees(m_pidController.getSetpoint().position));
-        SmartDashboard.putNumber("Elevator PID Profile Velocity",
-            Math.toDegrees(m_pidController.getSetpoint().velocity));
+        SmartDashboard.putNumber("Elevator PID Profile Position",m_pidController.getSetpoint().position);
+        SmartDashboard.putNumber("Elevator PID Profile Velocity",m_pidController.getSetpoint().velocity);
         SmartDashboard.putNumber("Eleavtor Profile Position", m_pidController.getSetpoint().position);
         SmartDashboard.putNumber("Eleavtor Profile Velocity", m_pidController.getSetpoint().velocity);
 
@@ -279,14 +277,16 @@ public class Elevator extends SubsystemBase {
   public void setPIDSetpoint(double inches) {
     if (m_controlMode != ControlMode.kPID) {
       m_pidController.reset(getPosition());
+      m_pidLastVelocitySetpoint = 0;
+      m_pidLastTime = Timer.getFPGATimestamp();
     }
     m_controlMode = ControlMode.kPID;
     m_demand = inches;
   }
 
-  public Command pidCommand(DoubleSupplier rpmSupplier) {
+  public Command pidCommand(DoubleSupplier inches) {
     return Commands.runEnd(
-        () -> this.setPIDSetpoint(rpmSupplier.getAsDouble()), this::stop, this);
+        () -> this.setPIDSetpoint(inches.getAsDouble()), this::stop, this);
   }
 
   public Command pidCommand(double inches) {

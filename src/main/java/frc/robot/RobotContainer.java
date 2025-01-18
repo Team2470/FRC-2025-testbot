@@ -132,6 +132,7 @@ public class RobotContainer {
     // joystick.rightBumper().whileTrue(elevatorDownCommand());
     joystick.leftBumper().whileTrue(elevatorToPostitonCommandDash(24));
     joystick.rightBumper().whileTrue(elevatorToPostitonCommandDash(10));
+    joystick.povUp().whileTrue(elevatorToPostitonCommandDash(42));
 
     // joystick.y().whileTrue(elevatorToPostitonCommandDash());
     joystick.y().whileTrue(elevatorUpCommand());
