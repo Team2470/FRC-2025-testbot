@@ -10,7 +10,7 @@ public class Constants {
     public static class ElevatorConstants {
 
         public static final int kMotorID = 1;
-        public static final int kFollowerMotorID = 2;
+        public static final int kMotorFollowerID = 2;
         public static final boolean kMotorInverted = true;
         public static final double kP = 0.2/0.275046436822;
         public static final double kI = 0;

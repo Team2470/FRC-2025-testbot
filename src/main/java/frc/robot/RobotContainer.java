@@ -246,6 +246,8 @@ public class RobotContainer {
     joystick.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
     drivetrain.registerTelemetry(logger::telemeterize);
+
+    joystick.back().whileTrue(elevatorHomeCommand());
   }
 
     public Command getAutonomousCommand() {
@@ -257,7 +259,9 @@ public class RobotContainer {
         elevator1.openLoopCommand(1)
       );
     }
-
+    public Command elevatorHomeCommand(){
+        return elevator1.elevatorHomeCommand();
+    }
     public Command elevatorDownCommand(){
       return new ParallelCommandGroup(
         elevator1.openLoopCommand(-0.5)

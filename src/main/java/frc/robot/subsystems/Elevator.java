@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Rotation;
-
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -15,6 +13,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -25,39 +24,72 @@ public class Elevator extends SubsystemBase {
   /** Creates a new Elevator. */
 
   private enum ControlMode {
-    kOpenLoop, kPID
+    kOpenLoop, kPID, kStop, kHoming
   }
+  //
+  // Hardware
+  //
+  private final TalonFX m_motor;
+  private final TalonFX m_motorFollower;
+  private final DigitalInput m_retractLimit;
 
-  private ControlMode m_controlMode = ControlMode.kOpenLoop;
+  //
+  //State
+  //
+  private ControlMode m_controlMode = ControlMode.kStop;
   private final PIDController m_pidController = new PIDController(0, 0, 0);
   private double m_demand;
-  private final TalonFX m_motor;
-  private final TalonFX m_followerMotor;
-  double outputVoltage = 0;
+  private boolean m_isHomed;
+  
+
 
   public Elevator() {
 
     TalonFXConfiguration config = new TalonFXConfiguration();
 
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 5;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 80;
+
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimit = 40;
     config.CurrentLimits.StatorCurrentLimitEnable = false;
     config.CurrentLimits.StatorCurrentLimit = 125;
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+    //
+    // Setup Follower motor
+    //
+    m_motorFollower = new TalonFX(ElevatorConstants.kMotorFollowerID);
+    m_motorFollower.getConfigurator().apply(config);
+    m_motorFollower.optimizeBusUtilization();
+    m_motorFollower.setControl(new Follower(ElevatorConstants.kMotorID, true));
+    
+
+    //
+    // Apply add extra leader configuration on top of the base config
+    // - Any control related settings for PID, Motion Magic, Remote Sensors, etc..
+    // - Soft limits should only be applied to the leader motor, if they are applied
+    // to the follower
+    // it may stop moving if their built in encoders are not in sync.
+    //
+    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 80;
+    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.25;
 
     m_motor = new TalonFX(ElevatorConstants.kMotorID);
     m_motor.getConfigurator().apply(config);
-    m_motor.getVelocity().setUpdateFrequency(50);
+
+    // We want to read position data from the leader motor
+    m_motor.getPosition().setUpdateFrequency(50);
+
+    // These 3 are needed for the follower motor to work
+    m_motor.getDutyCycle().setUpdateFrequency(50);
+    m_motor.getMotorVoltage().setUpdateFrequency(50);
+    m_motor.getTorqueCurrent().setUpdateFrequency(50);
     m_motor.optimizeBusUtilization();
 
-    m_followerMotor = new TalonFX(ElevatorConstants.kFollowerMotorID);
-    m_followerMotor.optimizeBusUtilization();
-    m_followerMotor.setControl(new Follower(ElevatorConstants.kMotorID, true));
+    // Limit switch setup
+    m_retractLimit = new DigitalInput(ElevatorConstants.kRetractLimitChannel);
 
     SmartDashboard.putNumber("Elevator kP", ElevatorConstants.kP);
     SmartDashboard.putNumber("Elevator kI", ElevatorConstants.kI);
@@ -69,11 +101,32 @@ public class Elevator extends SubsystemBase {
     return m_motor.getPosition().getValueAsDouble() * ElevatorConstants.kRotationToInches;
   }
 
+  public boolean isRetracted() {
+    return !m_retractLimit.get();
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
 
+    double outputVoltage = 0;
+
     switch (m_controlMode) {
+
+      case kHoming:
+        // Do homing stuff here
+        if (isRetracted() ) {
+          m_motor.setVoltage(0);
+          m_motor.setPosition(0);
+          m_isHomed = true;
+          m_controlMode = ControlMode.kStop;
+        } else {
+          outputVoltage = -2;
+        }
+        break;
+      case kStop:
+        outputVoltage = 0;
+        break;
 
       case kOpenLoop:
         // Do openloop stuff here
@@ -97,36 +150,16 @@ public class Elevator extends SubsystemBase {
         break;
     }
 
-    // Publish to smart dashboard
-    // // SmartDashboard.putNumber("elevator " + (m_isInverted ? "Left" : "Right")+"
-    // // Velocity", getVelocity());
-    // SmartDashboard.putNumber("elevator " + (m_isInverted ? "Left" : "Right") + "
-    // output voltage", outputVoltage);
-    // // SmartDashboard.putNumber("elevator "+ (m_isInverted ? "Left" : "Right") +
-    // "
-    // // RPM Error", getErrorRPM());
-    // // SmartDashboard.putNumber("elevator " + (m_isInverted ? "Left" : "Right") +
-    // "
-    // // RPM Percent Error", getErrorPercent());
-    // SmartDashboard.putString("elevator " + (m_isInverted ? "Left" : "Right") + "
-    // Control Mode",
-    // m_controlMode.toString());
-    // // SmartDashboard.putBoolean("elevator InRange"+ (m_isInverted ? "Left" :
-    // // "Right"), isErrorInRange());
-    // SmartDashboard.putNumber("elevator " + (m_isInverted ? "Left" : "Right") +
-    // "elevator rotation",
-    // m_motor.getPosition().getValueAsDouble());
-    SmartDashboard.putNumber("Height", getPosition());
-    SmartDashboard.putNumber("demand", m_demand);
+    SmartDashboard.putNumber("Elevator Height", getPosition());
+    SmartDashboard.putNumber("Elevator Demand", m_demand);
+    SmartDashboard.putNumber("Elevator HeightInRotations", m_motor.getPosition().getValueAsDouble());
+    SmartDashboard.putBoolean("Elevator is Retracted", isRetracted());
+    SmartDashboard.putBoolean("Elevator is Homed", m_isHomed);
+    SmartDashboard.putString("Elevator Controlmode", m_controlMode.toString());
+    SmartDashboard.putNumber("Elevator Demand", m_demand);
 
-    if (m_motor.getPosition().getValueAsDouble() < 5 && outputVoltage < 0) {
-      outputVoltage = 0;
-    } else if (m_motor.getPosition().getValueAsDouble() > 80 && outputVoltage > 0) {
-      outputVoltage = 0;
-    } else {
-      m_motor.setVoltage(outputVoltage);
-      m_followerMotor.setVoltage(outputVoltage);
-    }
+    m_motor.setVoltage(outputVoltage);
+    
   }
 
   public void setOutputVoltage(double OutputVoltage) {
@@ -144,8 +177,17 @@ public class Elevator extends SubsystemBase {
     return openLoopCommand(() -> OutputVoltage);
   }
 
+  public Command elevatorHomeCommand() {
+    return Commands.runEnd(() -> this.startHoming(), this::stop, this);
+  }
+
+  public void startHoming() {
+    m_controlMode = ControlMode.kHoming;
+  }
+
   public void stop() {
-    setOutputVoltage(0);
+    m_controlMode = ControlMode.kStop;
+    m_demand = 0;
   }
 
   // pid
@@ -166,7 +208,7 @@ public class Elevator extends SubsystemBase {
     }
     return 0;
   }
-  
+
   public Command waitUntilErrorInrange() {
     return Commands.waitUntil(() -> this.isErrorInRange());
   }
