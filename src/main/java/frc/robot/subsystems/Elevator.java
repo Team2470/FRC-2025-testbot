@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import java.io.ObjectInputFilter.Config;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -13,8 +12,12 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -41,12 +44,21 @@ public class Elevator extends SubsystemBase {
   // State
   //
   private ControlMode m_controlMode = ControlMode.kStop;
-  private final PIDController m_pidController = new PIDController(0, 0, 0);
+  private final ProfiledPIDController m_pidController = new ProfiledPIDController(ElevatorConstants.kP,
+      ElevatorConstants.kI, ElevatorConstants.kD,
+      new TrapezoidProfile.Constraints(24, 24));
+
+  private ElevatorFeedforward m_feedforward = new ElevatorFeedforward(ElevatorConstants.kS, ElevatorConstants.kG,
+      ElevatorConstants.kV,
+      ElevatorConstants.kA);
+
+  private double m_pidLastVelocitySetpoint = 0;
+  private double m_pidLastTime;
+
   private double m_demand;
   private boolean m_isHomed;
 
   public Elevator() {
-
 
     m_motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     m_motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -94,11 +106,19 @@ public class Elevator extends SubsystemBase {
     SmartDashboard.putNumber("Elevator kP", ElevatorConstants.kP);
     SmartDashboard.putNumber("Elevator kI", ElevatorConstants.kI);
     SmartDashboard.putNumber("Elevator kD", ElevatorConstants.kD);
-    SmartDashboard.putNumber("Elevator kF", ElevatorConstants.kF);
+    SmartDashboard.putNumber("Elevator kS", ElevatorConstants.kS);
+    SmartDashboard.putNumber("Elevator kG", ElevatorConstants.kG);
+    SmartDashboard.putNumber("Elevator kV", ElevatorConstants.kV);
+    SmartDashboard.putNumber("Elevator kA", ElevatorConstants.kA);
+
   }
 
   public double getPosition() {
     return m_motor.getPosition().getValueAsDouble() * ElevatorConstants.kRotationToInches;
+  }
+
+  public double getVelocity() {
+    return m_motor.getVelocity().getValueAsDouble() * ElevatorConstants.kRotationToInches;
   }
 
   public boolean isRetracted() {
@@ -126,7 +146,7 @@ public class Elevator extends SubsystemBase {
       case kHoming:
 
         // Do homing stuff here
-          outputVoltage = -2;
+        outputVoltage = -2;
 
         break;
       case kStop:
@@ -143,12 +163,35 @@ public class Elevator extends SubsystemBase {
 
       case kPID:
 
-        m_pidController.setP(SmartDashboard.getNumber("Elevator kP", 0));
-        m_pidController.setI(SmartDashboard.getNumber("Elevator kI", 0));
-        m_pidController.setD(SmartDashboard.getNumber("Elevator kD", 0));
-        double kF = SmartDashboard.getNumber("Elevator kF", 0);
+        m_feedforward = new ElevatorFeedforward(
+            SmartDashboard.getNumber("Elevator kS", ElevatorConstants.kS),
+            SmartDashboard.getNumber("Elevator kG", ElevatorConstants.kG),
+            SmartDashboard.getNumber("Elevator kV", ElevatorConstants.kV),
+            SmartDashboard.getNumber("Elevator kA", ElevatorConstants.kA));
 
-        outputVoltage = kF * m_demand + m_pidController.calculate(getPosition(), m_demand);
+        m_pidController.setP(SmartDashboard.getNumber("Elevator kP", ElevatorConstants.kP));
+        m_pidController.setI(SmartDashboard.getNumber("Elevator kI", ElevatorConstants.kI));
+        m_pidController.setD(SmartDashboard.getNumber("Elevator kD", ElevatorConstants.kD));
+
+        double dt = Timer.getFPGATimestamp() - m_pidLastTime;
+        double accelerationSetpoint = (m_pidController.getSetpoint().velocity - m_pidLastVelocitySetpoint) / dt;
+
+        double PIDoutPutVoltage = m_pidController.calculate(getPosition(), m_demand);
+        double feedforwardVoltage = m_feedforward.calculate(m_pidController.getSetpoint().velocity,
+            accelerationSetpoint);
+
+        outputVoltage = PIDoutPutVoltage + feedforwardVoltage;
+        SmartDashboard.putNumber("Elevator Pid output voltage", PIDoutPutVoltage);
+        SmartDashboard.putNumber("Elevator Feed Fowrad output voltage", feedforwardVoltage);
+        SmartDashboard.putNumber("Elevator PID Profile Position",
+            Math.toDegrees(m_pidController.getSetpoint().position));
+        SmartDashboard.putNumber("Elevator PID Profile Velocity",
+            Math.toDegrees(m_pidController.getSetpoint().velocity));
+        SmartDashboard.putNumber("Eleavtor Profile Position", m_pidController.getSetpoint().position);
+        SmartDashboard.putNumber("Eleavtor Profile Velocity", m_pidController.getSetpoint().velocity);
+
+        m_pidLastVelocitySetpoint = m_pidController.getSetpoint().velocity;
+        m_pidLastTime = Timer.getFPGATimestamp();
 
         break;
       default:
@@ -156,9 +199,10 @@ public class Elevator extends SubsystemBase {
         break;
     }
 
-    SmartDashboard.putNumber("Elevator Height", getPosition());
+    SmartDashboard.putNumber("Elevator Position", getPosition());
+    SmartDashboard.putNumber("Elevator Velocity", getVelocity());
     SmartDashboard.putNumber("Elevator Demand", m_demand);
-    SmartDashboard.putNumber("Elevator HeightInRotations", m_motor.getPosition().getValueAsDouble());
+    SmartDashboard.putNumber("Elevator PositionInRotations", m_motor.getPosition().getValueAsDouble());
     SmartDashboard.putBoolean("Elevator is Retracted", isRetracted());
     SmartDashboard.putBoolean("Elevator is Homed", m_isHomed);
     SmartDashboard.putString("Elevator Controlmode", m_controlMode.toString());
@@ -185,22 +229,20 @@ public class Elevator extends SubsystemBase {
 
   public Command elevatorHomeCommand() {
     return new FunctionalCommand(
-        () ->{
+        () -> {
           m_motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
-          m_motor.getConfigurator().apply(m_motorConfig);   
+          m_motor.getConfigurator().apply(m_motorConfig);
         },
-        ()->{
-          m_controlMode = ControlMode.kHoming;       
+        () -> {
+          m_controlMode = ControlMode.kHoming;
         },
-        (Boolean)->{
+        (Boolean) -> {
           m_motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
           m_motor.getConfigurator().apply(m_motorConfig);
           stop();
         }, this::isRetracted,
-        this
-        );
+        this);
   }
-
 
   public void stop() {
     m_controlMode = ControlMode.kStop;
@@ -208,14 +250,9 @@ public class Elevator extends SubsystemBase {
   }
 
   // pid
-  public double getErrorRotation() {
-    if (m_controlMode == ControlMode.kPID) {
-      return m_pidController.getPositionError();
-    }
-    return 0;
-  }
 
   public boolean isErrorInRange() {
+    // Todo: Find the correct value
     return (-4 < this.getErrorPercent() && this.getErrorPercent() < 4);
   }
 
@@ -240,6 +277,9 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setPIDSetpoint(double inches) {
+    if (m_controlMode != ControlMode.kPID) {
+      m_pidController.reset(getPosition());
+    }
     m_controlMode = ControlMode.kPID;
     m_demand = inches;
   }

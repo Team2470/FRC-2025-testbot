@@ -6,32 +6,21 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.ForwardReference;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
@@ -141,8 +130,9 @@ public class RobotContainer {
 
     // joystick.leftBumper().whileTrue(elevatorUpCommand());
     // joystick.rightBumper().whileTrue(elevatorDownCommand());
-    joystick.leftBumper().whileTrue(elevatorToPostitonCommandDash(20));
+    joystick.leftBumper().whileTrue(elevatorToPostitonCommandDash(24));
     joystick.rightBumper().whileTrue(elevatorToPostitonCommandDash(10));
+
     // joystick.y().whileTrue(elevatorToPostitonCommandDash());
     joystick.y().whileTrue(elevatorUpCommand());
     joystick.b().whileTrue(elevatorDownCommand());
@@ -264,7 +254,7 @@ public class RobotContainer {
     }
     public Command elevatorDownCommand(){
       return new ParallelCommandGroup(
-        elevator1.openLoopCommand(-0.5)
+        elevator1.openLoopCommand(-2)
       );
     }
     public Command elevatorToPostitonCommand(){
