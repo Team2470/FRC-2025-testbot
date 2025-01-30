@@ -26,6 +26,16 @@ public class Constants {
         public static final double kRotationToInches = 2.0 * 1.0/20.0 * 1.751 * Math.PI;//TODO: Find the correct value
     }
 
+    public static class WristConstants {
+
+        public static final int kMotorID =  30;
+        public static final boolean kMotorInverted = false;
+        public static final int kEncoderID = 30;
+        public static final double kSensorToMechanismRatio = 1.0;
+        public static final double kRotorToSensorRatio = 160;
+
+    
+    } 
 
 
 }
