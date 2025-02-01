@@ -10,6 +10,7 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.jni.PlatformJNI;
 import com.ctre.phoenix6.sim.DeviceType;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 
 import java.util.function.DoubleSupplier;
@@ -22,6 +23,7 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.*;
@@ -32,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.WristConstants;
 import frc.robot.Constants.ArmConstants;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -46,7 +49,7 @@ public class Arm extends SubsystemBase {
     //
     private final TalonFX m_motor;
     private final CANdi m_candi;
-
+    private final MedianFilter m_absoluteEncoderFilter = new MedianFilter(5);
     //
     // State
     //
@@ -71,7 +74,7 @@ public class Arm extends SubsystemBase {
     
         TalonFXConfiguration motorConfig = new TalonFXConfiguration();
         motorConfig.Feedback.FeedbackRemoteSensorID = m_candi.getDeviceID();
-        motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANdiPWM1;
+        motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
         motorConfig.Feedback.SensorToMechanismRatio = ArmConstants.kSensorToMechanismRatio;
         motorConfig.Feedback.RotorToSensorRatio = ArmConstants.kRotorToSensorRatio;
         
@@ -115,12 +118,24 @@ public class Arm extends SubsystemBase {
         return Units.rotationsToDegrees(m_motor.getPosition().getValueAsDouble());
     }
 
+    public double getAbsolutePosition() {
+        return Units.rotationsToDegrees(Math.IEEEremainder(m_candi.getPWM1Position().getValueAsDouble(),1));
+    }
+
     public double getVelocity() {
         return Units.rotationsToDegrees(m_motor.getVelocity().getValueAsDouble());
     }
     
     @Override
     public void periodic () {
+        
+        // Calculates the next value of the output
+        var absolutePositionFiltered = (m_absoluteEncoderFilter.calculate(getAbsolutePosition()));
+        
+        if (DriverStation.isDisabled()) {
+            m_motor.setPosition(Degrees.of(absolutePositionFiltered));
+        }
+
         double outputVoltage = 0;
         switch (m_controlMode) {
             case kStop:
@@ -135,7 +150,7 @@ public class Arm extends SubsystemBase {
       
               break;
 
-            case kPID:
+            case kPID:           
                 
                 m_feedforward = new ArmFeedforward(
                     SmartDashboard.getNumber("Arm kS", ArmConstants.kS),
@@ -166,6 +181,10 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("Arm Velocity", getVelocity());
         SmartDashboard.putString("Arm Controlmode", m_controlMode.toString());
         SmartDashboard.putNumber("Arm Demand", m_demand);
+        SmartDashboard.putNumber("Arm Absolute Position", getAbsolutePosition());
+        SmartDashboard.putNumber("Arm Absolute Position Filtered", absolutePositionFiltered);
+        SmartDashboard.putNumber("Arm Absolute Position Raw", m_candi.getPWM1Position().getValueAsDouble());
+
 
         m_motor.setVoltage(outputVoltage);
 

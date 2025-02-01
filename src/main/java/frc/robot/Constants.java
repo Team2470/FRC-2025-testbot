@@ -28,9 +28,9 @@ public class Constants {
 
     public static class WristConstants {
 
-        public static final int kMotorID =  30;
+        public static final int kMotorID =  31;
         public static final boolean kMotorInverted = false;
-        public static final int kEncoderID = 30;
+        public static final int kEncoderID = 31;
         public static final double kSensorToMechanismRatio = 1.0;
         public static final double kRotorToSensorRatio = 160;
         public static final double kP = 0;
