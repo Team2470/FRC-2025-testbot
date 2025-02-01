@@ -37,6 +37,8 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 // import frc.robot.subsystems.Elevator;
 // import frc.robot.subsystems.ReduxColorSensor;
 import frc.robot.subsystems.CoralThing;
+import frc.robot.subsystems.CoralThing_FXS;
+//import frc.robot.subsystems.TalonFXSTest;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -57,7 +59,9 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
-    private final CoralThing coralthing = new CoralThing(0, 24, false);
+    private final CoralThing_FXS coralthing_Fxs = new CoralThing_FXS(0, 0, false);
+
+    //private final TalonFXSTest talonFXS = new TalonFXSTest(0);
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     
 
@@ -140,8 +144,10 @@ public class RobotContainer {
 
     // Robot Centric when pressing A
     final var robotCentric = new SwerveRequest.RobotCentric();
-    joystick.x().whileTrue(coralthing.runMotorForwardsCommand());
-    joystick.y().whileTrue(coralthing.ignoreLimitCommand());
+    joystick.x().onTrue(coralthing_Fxs.slowMotorAtSensorCommand());
+    //joystick.x().onTrue(coralthing_Fxs.slowMotorAtSensorCommand(joystick.y().getAsBoolean()));
+    joystick.y().onTrue(coralthing_Fxs.stopMotorCommand());
+    //joystick.y().whileTrue(coralthing.ignoreLimitCommand());
     // joystick.leftBumper().whileTrue(elevatorUpCommand());
     // joystick.rightBumper().whileTrue(elevatorDownCommand());
     // joystick.leftBumper().whileTrue(elevatorToPostitonCommandDash(75));
@@ -282,6 +288,7 @@ public class RobotContainer {
 
     public void robotPeriodic() {
       SmartDashboard.putNumber("target", target);
+      SmartDashboard.putBoolean("y button press", joystick.y().getAsBoolean());
     }
 }
 

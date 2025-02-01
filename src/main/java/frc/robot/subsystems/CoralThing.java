@@ -41,7 +41,8 @@ public class CoralThing  extends SubsystemBase {
         config.HardwareLimitSwitch.ForwardLimitSource = ForwardLimitSourceValue.RemoteCANdiS1;
         config.HardwareLimitSwitch.ForwardLimitRemoteSensorID = 0;
         config.HardwareLimitSwitch.ForwardLimitEnable = true;
-        m_motor.getConfigurator().apply(config); 
+        
+        //m_motor.getConfigurator().apply(config); 
         m_motor.setNeutralMode(NeutralModeValue.Brake);
     }
     public boolean getS1Closed() {
