@@ -33,7 +33,7 @@ public class RobotContainer {
     public double target = 40;
 
   private final Elevator elevator1 = new Elevator();
-  private final Wrist wrist = new Wrist(24);
+  private final Wrist wrist = new Wrist();
   // private final Elevator elevator2 = new Elevator(2, false);  
 
 
