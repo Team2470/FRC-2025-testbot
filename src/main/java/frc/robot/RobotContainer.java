@@ -25,6 +25,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Wrist;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.ReduxColorSensor;
 
 public class RobotContainer {

@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
+
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.CANdi;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.configs.*;
@@ -35,7 +37,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 
-public class Wrist extends SubsystemBase {
+public class Arm extends SubsystemBase {
     private enum ControlMode {
         kOpenLoop, kPID, kStop, kHoming
     }
@@ -43,7 +45,7 @@ public class Wrist extends SubsystemBase {
     // Hardware
     //
     private final TalonFX m_motor;
-    private final CANcoder m_encoder;
+    private final CANdi m_candi;
 
     //
     // State
@@ -51,29 +53,27 @@ public class Wrist extends SubsystemBase {
     private ControlMode m_controlMode = ControlMode.kStop;
     private double m_demand;
 
-    private final ProfiledPIDController m_pidController = new ProfiledPIDController(WristConstants.kP,
-      WristConstants.kI, WristConstants.kD,
+    private final ProfiledPIDController m_pidController = new ProfiledPIDController(ArmConstants.kP,
+      ArmConstants.kI, ArmConstants.kD,
       new TrapezoidProfile.Constraints(0, 0));
 
-    private ArmFeedforward m_feedforward = new ArmFeedforward(WristConstants.kS, WristConstants.kG,
-      WristConstants.kV,
-      WristConstants.kA);
+    private ArmFeedforward m_feedforward = new ArmFeedforward(ArmConstants.kS, ArmConstants.kG,
+      ArmConstants.kV,
+      ArmConstants.kA);
 
-    public Wrist () {
-
-        CANcoderConfiguration encoderConfig = new CANcoderConfiguration();
-        encoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
-        encoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
-        encoderConfig.MagnetSensor.MagnetOffset = 0;
-
-        m_encoder = new CANcoder(WristConstants.kEncoderID, "rio");
-        m_encoder.getConfigurator().apply(encoderConfig);
- 
+    public Arm () {
+        CANdiConfiguration candiconfig = new CANdiConfiguration();
+        candiconfig.PWM1.AbsoluteSensorDiscontinuityPoint = 0.5;
+        candiconfig.PWM1.SensorDirection = false;
+        candiconfig.PWM1.AbsoluteSensorOffset = 0;
+        m_candi = new CANdi(ArmConstants.kCANdiID, "rio");
+        m_candi.getConfigurator().apply(candiconfig);
+    
         TalonFXConfiguration motorConfig = new TalonFXConfiguration();
-        motorConfig.Feedback.FeedbackRemoteSensorID = m_encoder.getDeviceID();
-        motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-        motorConfig.Feedback.SensorToMechanismRatio = WristConstants.kSensorToMechanismRatio;
-        motorConfig.Feedback.RotorToSensorRatio = WristConstants.kRotorToSensorRatio;
+        motorConfig.Feedback.FeedbackRemoteSensorID = m_candi.getDeviceID();
+        motorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANdiPWM1;
+        motorConfig.Feedback.SensorToMechanismRatio = ArmConstants.kSensorToMechanismRatio;
+        motorConfig.Feedback.RotorToSensorRatio = ArmConstants.kRotorToSensorRatio;
         
         motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -89,7 +89,7 @@ public class Wrist extends SubsystemBase {
         motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.25;
 
-        m_motor = new TalonFX(WristConstants.kMotorID, "rio");
+        m_motor = new TalonFX(ArmConstants.kMotorID, "rio");
         m_motor.getConfigurator().apply(motorConfig);
 
         // We want to read position data from the leader motor
@@ -97,13 +97,13 @@ public class Wrist extends SubsystemBase {
         m_motor.getVelocity().setUpdateFrequency(50);
         m_motor.optimizeBusUtilization();
     
-        SmartDashboard.putNumber("Wrist kP", WristConstants.kP);
-        SmartDashboard.putNumber("Wrist kI", WristConstants.kI);
-        SmartDashboard.putNumber("Wrist kD", WristConstants.kD);
-        SmartDashboard.putNumber("Wrist kS", WristConstants.kS);
-        SmartDashboard.putNumber("Wrist kG", WristConstants.kG);
-        SmartDashboard.putNumber("Wrist kV", WristConstants.kV);
-        SmartDashboard.putNumber("Wrist kA", WristConstants.kA);
+        SmartDashboard.putNumber("Arm kP", ArmConstants.kP);
+        SmartDashboard.putNumber("Arm kI", ArmConstants.kI);
+        SmartDashboard.putNumber("Arm kD", ArmConstants.kD);
+        SmartDashboard.putNumber("Arm kS", ArmConstants.kS);
+        SmartDashboard.putNumber("Arm kG", ArmConstants.kG);
+        SmartDashboard.putNumber("Arm kV", ArmConstants.kV);
+        SmartDashboard.putNumber("Arm kA", ArmConstants.kA);
 
     }
 
@@ -138,15 +138,15 @@ public class Wrist extends SubsystemBase {
             case kPID:
                 
                 m_feedforward = new ArmFeedforward(
-                    SmartDashboard.getNumber("Wrist kS", WristConstants.kS),
-                    SmartDashboard.getNumber("Wrist kG", WristConstants.kG),
-                    SmartDashboard.getNumber("Wrist kV", WristConstants.kV),
-                    SmartDashboard.getNumber("Wrist kA", WristConstants.kA)
+                    SmartDashboard.getNumber("Arm kS", ArmConstants.kS),
+                    SmartDashboard.getNumber("Arm kG", ArmConstants.kG),
+                    SmartDashboard.getNumber("Arm kV", ArmConstants.kV),
+                    SmartDashboard.getNumber("Arm kA", ArmConstants.kA)
                 );
 
-                m_pidController.setP(SmartDashboard.getNumber("Wrist kP", WristConstants.kP));
-                m_pidController.setI(SmartDashboard.getNumber("Wrist kI", WristConstants.kI));
-                m_pidController.setD(SmartDashboard.getNumber("Wrist kD", WristConstants.kD));
+                m_pidController.setP(SmartDashboard.getNumber("Arm kP", ArmConstants.kP));
+                m_pidController.setI(SmartDashboard.getNumber("Arm kI", ArmConstants.kI));
+                m_pidController.setD(SmartDashboard.getNumber("Arm kD", ArmConstants.kD));
                 
                 double PIDoutPutVoltage = m_pidController.calculate(Units.degreesToRadians(getPosition()), Units.degreesToRadians(m_demand));
 
@@ -154,18 +154,18 @@ public class Wrist extends SubsystemBase {
                     m_pidController.getSetpoint().velocity);
 
                 outputVoltage = PIDoutPutVoltage + feedforwardVoltage;
-                SmartDashboard.putNumber("Wrist Pid output voltage", PIDoutPutVoltage);
-                SmartDashboard.putNumber("Wrist Feed Fowrad output voltage", feedforwardVoltage);
-                SmartDashboard.putNumber("Wrist PID Profile Position",Units.radiansToDegrees(m_pidController.getSetpoint().position));
-                SmartDashboard.putNumber("Wrist PID Profile Velocity",Units.radiansToDegrees(m_pidController.getSetpoint().velocity));
+                SmartDashboard.putNumber("Arm Pid output voltage", PIDoutPutVoltage);
+                SmartDashboard.putNumber("Arm Feed Fowrad output voltage", feedforwardVoltage);
+                SmartDashboard.putNumber("Arm PID Profile Position",Units.radiansToDegrees(m_pidController.getSetpoint().position));
+                SmartDashboard.putNumber("Arm PID Profile Velocity",Units.radiansToDegrees(m_pidController.getSetpoint().velocity));
 
                 break;
         }
 
-        SmartDashboard.putNumber("Wrist Position", getPosition());
-        SmartDashboard.putNumber("Wrist Velocity", getVelocity());
-        SmartDashboard.putString("Wrist Controlmode", m_controlMode.toString());
-        SmartDashboard.putNumber("Wrist Demand", m_demand);
+        SmartDashboard.putNumber("Arm Position", getPosition());
+        SmartDashboard.putNumber("Arm Velocity", getVelocity());
+        SmartDashboard.putString("Arm Controlmode", m_controlMode.toString());
+        SmartDashboard.putNumber("Arm Demand", m_demand);
 
         m_motor.setVoltage(outputVoltage);
 
