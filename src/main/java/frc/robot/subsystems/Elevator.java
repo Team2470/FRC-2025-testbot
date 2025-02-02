@@ -185,8 +185,6 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("Elevator Feed Fowrad output voltage", feedforwardVoltage);
         SmartDashboard.putNumber("Elevator PID Profile Position",m_pidController.getSetpoint().position);
         SmartDashboard.putNumber("Elevator PID Profile Velocity",m_pidController.getSetpoint().velocity);
-        SmartDashboard.putNumber("Eleavtor Profile Position", m_pidController.getSetpoint().position);
-        SmartDashboard.putNumber("Eleavtor Profile Velocity", m_pidController.getSetpoint().velocity);
 
         m_pidLastVelocitySetpoint = m_pidController.getSetpoint().velocity;
         m_pidLastTime = Timer.getFPGATimestamp();

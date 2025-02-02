@@ -26,6 +26,39 @@ public class Constants {
         public static final double kRotationToInches = 2.0 * 1.0/20.0 * 1.751 * Math.PI;//TODO: Find the correct value
     }
 
+    public static class WristConstants {
+
+        public static final int kMotorID =  31;
+        public static final boolean kMotorInverted = false;
+        public static final int kEncoderID = 31;
+        public static final double kSensorToMechanismRatio = 1.0;
+        public static final double kRotorToSensorRatio = 160;
+        public static final double kP = 0;
+        public static final double kI = 0;
+        public static final double kD = 0;
+        public static final double kS = 0;
+        public static final double kG = 0;
+        public static final double kV = 0;
+        public static final double kA = 0;
+    
+    }
+    
+    public static class ArmConstants {
+
+        public static final int kMotorID =  30;
+        public static final boolean kMotorInverted = false;
+        public static final int kCANdiID = 30;
+        public static final double kSensorToMechanismRatio = 1.0;
+        public static final double kRotorToSensorRatio = 160;
+        public static final double kP = 0;
+        public static final double kI = 0;
+        public static final double kD = 0;
+        public static final double kS = 0;
+        public static final double kG = 0;
+        public static final double kV = 0;
+        public static final double kA = 0;
+    
+    } 
 
 
 }

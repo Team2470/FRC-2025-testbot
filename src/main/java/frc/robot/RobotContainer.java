@@ -24,6 +24,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Wrist;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.ReduxColorSensor;
 
 public class RobotContainer {
@@ -32,6 +34,7 @@ public class RobotContainer {
     public double target = 40;
 
   private final Elevator elevator1 = new Elevator();
+  private final Wrist wrist = new Wrist();
   // private final Elevator elevator2 = new Elevator(2, false);  
 
 
@@ -135,6 +138,7 @@ public class RobotContainer {
     joystick.povUp().whileTrue(elevatorToPostitonCommandDash(42));
 
     // joystick.y().whileTrue(elevatorToPostitonCommandDash());
+    joystick.rightBumper().whileTrue(wrist.openLoopCommand(6));
     joystick.y().whileTrue(elevatorUpCommand());
     joystick.b().whileTrue(elevatorDownCommand());
     joystick.a().whileTrue(drivetrain.applyRequest(()->{
