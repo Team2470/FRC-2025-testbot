@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -272,6 +273,26 @@ public class RobotContainer {
         elevator1.pidCommand(target)
       );
     }
+/*
+    // place holder for auto coral intake
+    public Command coralIntakeAuto(){
+      return new ParallelCommandGroup(
+        colorSensor.intakeCommand()
+      );
+    }
+
+    // place holder for auto L4 post scoring
+    public Command level4Auto(){
+      return new SequentialCommandGroup(
+          new ParallelCommandGroup(
+            elevator1.pidCommand(TARGET),
+            arm.pidCommand(TARGET),
+            wrist.pidCommand(TARGET)
+            ),
+        coralPlace()
+      );
+    }
+*/
 
     public void robotPeriodic() {
       SmartDashboard.putNumber("target", target);

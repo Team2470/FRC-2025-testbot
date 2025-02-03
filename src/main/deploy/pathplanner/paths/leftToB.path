@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.945977609742686,
-        "y": 6.3893133589459845
+        "x": 0.9045977794776918,
+        "y": 6.353436968810398
       },
       "isLocked": false,
       "linkedName": "leftStation"
@@ -20,8 +20,8 @@
         "y": 3.85
       },
       "prevControl": {
-        "x": 3.029492517534944,
-        "y": 4.032831065258146
+        "x": 3.026897867736516,
+        "y": 4.034954645828144
       },
       "nextControl": null,
       "isLocked": false,

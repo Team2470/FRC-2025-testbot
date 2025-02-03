@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.760127961556716,
-        "y": 1.2098943680679355
+        "x": 1.7094155844155845,
+        "y": 1.4822443181818175
       },
       "isLocked": false,
       "linkedName": "farRightStation"
@@ -20,8 +20,8 @@
         "y": 5.225
       },
       "prevControl": {
-        "x": 8.308190882776156,
-        "y": 4.739201242384442
+        "x": 2.9273741883116884,
+        "y": 7.144683441558441
       },
       "nextControl": null,
       "isLocked": false,

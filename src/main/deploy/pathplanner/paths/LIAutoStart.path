@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.838796184561303,
-        "y": 5.369043383679185
+        "x": 5.835058235046389,
+        "y": 5.385688718316889
       },
       "isLocked": false,
       "linkedName": "leftAutoStart"
@@ -20,8 +20,8 @@
         "y": 5.05
       },
       "prevControl": {
-        "x": 5.549918874609563,
-        "y": 5.056368368228146
+        "x": 5.5497607418518555,
+        "y": 5.060934890470897
       },
       "nextControl": null,
       "isLocked": false,
