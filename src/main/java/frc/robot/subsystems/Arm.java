@@ -169,8 +169,8 @@ public class Arm extends SubsystemBase {
                     m_pidController.getSetpoint().velocity);
 
                 outputVoltage = PIDoutPutVoltage + feedforwardVoltage;
-                SmartDashboard.putNumber("Arm Pid output voltage", PIDoutPutVoltage);
-                SmartDashboard.putNumber("Arm Feed Fowrad output voltage", feedforwardVoltage);
+                SmartDashboard.putNumber("Arm Pid Output Voltage", PIDoutPutVoltage);
+                SmartDashboard.putNumber("Arm Feed Foward Output Voltage", feedforwardVoltage);
                 SmartDashboard.putNumber("Arm PID Profile Position",Units.radiansToDegrees(m_pidController.getSetpoint().position));
                 SmartDashboard.putNumber("Arm PID Profile Velocity",Units.radiansToDegrees(m_pidController.getSetpoint().velocity));
 
