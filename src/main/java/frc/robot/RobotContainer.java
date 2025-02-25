@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
+import frc.robot.commands.Aligntoreef;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 // import frc.robot.subsystems.Elevator;
@@ -42,7 +42,7 @@ import frc.robot.subsystems.CoralThing_FXS;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    public static double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     public double target = 40;
 
   // private final Elevator elevator1 = new Elevator(1, true);
@@ -59,7 +59,7 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
-    private final CoralThing_FXS coralthing_Fxs = new CoralThing_FXS(0, 0, false);
+    //private final CoralThing_FXS coralthing_Fxs = new CoralThing_FXS(0, 0, false);
 
     //private final TalonFXSTest talonFXS = new TalonFXSTest(0);
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
@@ -144,9 +144,9 @@ public class RobotContainer {
 
     // Robot Centric when pressing A
     final var robotCentric = new SwerveRequest.RobotCentric();
-    joystick.x().onTrue(coralthing_Fxs.slowMotorAtSensorCommand());
+    //joystick.x().onTrue(coralthing_Fxs.slowMotorAtSensorCommand());
     //joystick.x().onTrue(coralthing_Fxs.slowMotorAtSensorCommand(joystick.y().getAsBoolean()));
-    joystick.y().onTrue(coralthing_Fxs.stopMotorCommand());
+    //joystick.y().onTrue(coralthing_Fxs.stopMotorCommand());
     //joystick.y().whileTrue(coralthing.ignoreLimitCommand());
     // joystick.leftBumper().whileTrue(elevatorUpCommand());
     // joystick.rightBumper().whileTrue(elevatorDownCommand());
@@ -252,6 +252,8 @@ public class RobotContainer {
 
     // Reset the field-centric heading on start press
     joystick.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+    joystick.y().whileTrue(new Aligntoreef(drivetrain));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
