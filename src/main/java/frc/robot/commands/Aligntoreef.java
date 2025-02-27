@@ -23,13 +23,13 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class Aligntoreef extends SequentialCommandGroup {
-  private final static String kLimelight = "limelight-shooter";
-  private final PIDController m_txPID = new PIDController(0.1, 0, 0);
-  private final PIDController m_tyPID = new PIDController(0.1,0,0);
+  private final static String kLimelight = "limelight-left";
+  private final PIDController m_txPID = new PIDController(0.15, 0, 0);
+  private final PIDController m_tyPID = new PIDController(0.1, 0, 0);
 
 
   final SwerveRequest.RobotCentricFacingAngle swerveAlign = new SwerveRequest.RobotCentricFacingAngle()
-    .withHeadingPID(5, 0, 0)
+    .withHeadingPID(10, 0, 0)
     .withRotationalDeadband(RobotContainer.MaxAngularRate * 0.1) // Add a 10% deadband
     .withDriveRequestType(DriveRequestType.OpenLoopVoltage) // Use open-loop control for drive motors
     .withSteerRequestType(SteerRequestType.MotionMagicExpo);
@@ -50,11 +50,30 @@ public class Aligntoreef extends SequentialCommandGroup {
       }),
       drive.applyRequest(() -> {
         double xMove = MathUtil.clamp(
-          m_tyPID.calculate(LimelightHelpers.getTY(kLimelight), 0), -1,1
+          m_tyPID.calculate(LimelightHelpers.getTY(kLimelight), 0), -0.2,0.2
         );
         double yMove = MathUtil.clamp(
-          m_txPID.calculate(LimelightHelpers.getTX(kLimelight), 0), -1,1
+          m_txPID.calculate(LimelightHelpers.getTX(kLimelight), 0), -0.2,0.2
         );
+
+        //yMove = 0.11;
+        if (m_txPID.getPositionError() >= 0.5) {
+          yMove = 0.11;
+        } else if (m_txPID.getPositionError() <= -0.5) {
+          yMove = -0.11;
+          
+        } else {
+          yMove = 0;
+        }
+
+        if (m_tyPID.getPositionError() >= 0.5) {
+          xMove = 0.11;
+        } else if (m_tyPID.getPositionError() <= -0.5) {
+          xMove = -0.11;
+        } else {
+          xMove = 0;
+        }
+      
         
         SmartDashboard.putNumber("AlignToReef tx error", m_txPID.getPositionError());
         SmartDashboard.putNumber("AlignToReef ty error", m_tyPID.getPositionError());
