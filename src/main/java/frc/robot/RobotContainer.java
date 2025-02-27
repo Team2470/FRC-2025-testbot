@@ -80,7 +80,7 @@ public class RobotContainer {
     final var yFilter = new SlewRateLimiter(5);
     final var rotateFilter = new SlewRateLimiter(5);
 
-    BooleanSupplier slowModeSupplier = () -> joystick.getHID().getXButton();
+    BooleanSupplier slowModeSupplier = () -> true || joystick.getHID().getXButton();
 
     DoubleSupplier rotationSupplier = () -> {
         double leftTrigger = joystick.getHID().getLeftTriggerAxis();
