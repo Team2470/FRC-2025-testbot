@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
+import frc.robot.LimelightHelpers.LimelightTarget_Classifier;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
@@ -28,6 +29,7 @@ public class Aligntoreef extends SequentialCommandGroup {
   private final PIDController m_tyPID = new PIDController(0.2, 0, 0);
   private double xFeedForward;
   private double yFeedForward;
+  private double heading;
 
   final SwerveRequest.RobotCentricFacingAngle swerveAlign = new SwerveRequest.RobotCentricFacingAngle()
     .withHeadingPID(10, 0, 0)
@@ -67,13 +69,80 @@ public class Aligntoreef extends SequentialCommandGroup {
           xFeedForward = -0.11;
         } 
 
+        int tagID = (int) LimelightHelpers.getFiducialID(kLimelight);
+        // if (tagID == 7) {
+        //   heading = 180;
+        // }
+        
+        // if (tagID == 18) {
+        //   heading = 0;
+        // }        
+        
+        // if (tagID == 10) {
+        //   heading = 0;
+        // }
+
+        // if (tagID == 21) {
+        //   heading = 180;
+        // }
+        
+        // if (tagID == 17) {
+        //   heading = 60;
+        // }
+        
+        // if (tagID == 19) {
+        //   heading = 300;
+        // }
+
+        // if (tagID == 22) {
+        //   heading = 120;
+        // }
+
+        // if (tagID == 20) {
+        //   heading = 240;
+        // }
+
+        // if (tagID == 11) {
+        //   heading = 60;
+        // }
+        
+        // if (tagID == 9) {
+        //   heading = 300;
+        // }
+
+        // if (tagID == 6) {
+        //   heading = 120;
+        // }
+
+        // if (tagID == 8) {
+        //   heading = 240;
+        // }
+
+        switch (tagID) {
+          case 7: heading = 180; break;
+          case 21: heading = 180; break;
+          case 10: heading = 0; break;
+          case 18: heading = 0; break;
+          case 11: heading = 60; break;
+          case 17: heading = 60; break;
+          case 8: heading = 240; break;
+          case 20: heading = 240; break;
+          case 9: heading = 300; break;
+          case 19: heading = 300; break;
+
+
+
+          default:
+            // This is a tag that we can't handle! OH NO
+        }
+
       }),
       drive.applyRequest(() -> {
         double xMove = MathUtil.clamp(
-          m_tyPID.calculate(LimelightHelpers.getTY(kLimelight), 0), -0.2,0.5
+          m_tyPID.calculate(LimelightHelpers.getTY(kLimelight), 0), -0.2,0.8
         );
         double yMove = MathUtil.clamp(
-          m_txPID.calculate(LimelightHelpers.getTX(kLimelight), 0), -0.2,0.5
+          m_txPID.calculate(LimelightHelpers.getTX(kLimelight), 0), -0.2,0.8
         );
 
         //yMove = 0.11;
@@ -94,7 +163,7 @@ public class Aligntoreef extends SequentialCommandGroup {
         return swerveAlign
           .withVelocityX(xMove)
           .withVelocityY(yMove)
-          .withTargetDirection(Rotation2d.fromDegrees(0));
+          .withTargetDirection(Rotation2d.fromDegrees(heading));
       }).until(m_tyPID::atSetpoint),
       Commands.runOnce(() -> {
         m_txPID.setP(0.1);
@@ -133,7 +202,8 @@ public class Aligntoreef extends SequentialCommandGroup {
         return swerveAlign
           .withVelocityX(xMove)
           .withVelocityY(yMove)
-          .withTargetDirection(Rotation2d.fromDegrees(0));
+          .withTargetDirection(Rotation2d.fromDegrees(heading));
+
       })
 
     );
