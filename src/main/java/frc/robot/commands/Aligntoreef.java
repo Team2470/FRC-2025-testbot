@@ -24,10 +24,10 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class Aligntoreef extends SequentialCommandGroup {
   private final static String kLimelight = "limelight-left";
-  private final PIDController m_txPID = new PIDController(0.15, 0, 0);
-  private final PIDController m_tyPID = new PIDController(0.11, 0, 0);
-  private double xMove;
-  private double yMove;
+  private final PIDController m_txPID = new PIDController(0.2, 0, 0.002);
+  private final PIDController m_tyPID = new PIDController(0.2, 0, 0);
+  private double xFeedForward;
+  private double yFeedForward;
 
   final SwerveRequest.RobotCentricFacingAngle swerveAlign = new SwerveRequest.RobotCentricFacingAngle()
     .withHeadingPID(10, 0, 0)
@@ -44,51 +44,98 @@ public class Aligntoreef extends SequentialCommandGroup {
       new WaitUntilCommand(()-> LimelightHelpers.getTV(kLimelight)),
       Commands.runOnce(() -> {
         m_txPID.reset();
-        m_txPID.setTolerance(1);
+        m_txPID.setP(0.2);
+        m_txPID.setI(0);
+        m_txPID.setD(0.002);
+        m_txPID.setTolerance(0.6);
 
         m_tyPID.reset();
-        m_tyPID.setTolerance(1);
+        m_tyPID.setP(0.2);
+        m_tyPID.setI(0);
+        m_tyPID.setD(0);
+        m_tyPID.setTolerance(0.6);
 
-        if (m_txPID.getPositionError() >= 0.5) {
-          yMove = 0.11;
-        } else if (m_txPID.getPositionError() <= -0.5) {
-          yMove = -0.11;
-
-        } else {
-          yMove = 0;
+        if (LimelightHelpers.getTX(kLimelight) <= 0) {
+          yFeedForward = 0.11;
+        } else  {
+          yFeedForward = -0.11;
         }
 
-        if (m_tyPID.getPositionError() >= 0.5) {
-          xMove = 0.11;
-        } else if (m_tyPID.getPositionError() <= -0.5) {
-          xMove = -0.11;
+        if (LimelightHelpers.getTY(kLimelight) <= 0) {
+          xFeedForward = 0.11;
         } else {
-          xMove = 0;
-        }
+          xFeedForward = -0.11;
+        } 
 
       }),
       drive.applyRequest(() -> {
         double xMove = MathUtil.clamp(
-          m_tyPID.calculate(LimelightHelpers.getTY(kLimelight), 0), -0.2,0.2
+          m_tyPID.calculate(LimelightHelpers.getTY(kLimelight), 0), -0.2,0.5
         );
         double yMove = MathUtil.clamp(
-          m_txPID.calculate(LimelightHelpers.getTX(kLimelight), 0), -0.2,0.2
+          m_txPID.calculate(LimelightHelpers.getTX(kLimelight), 0), -0.2,0.5
         );
 
         //yMove = 0.11;
-        
-      
-        
+        xMove += xFeedForward;
+        yMove += yFeedForward;
+        // xMove = MathUtil.applyDeadband(xMove, 0.01);
+        // yMove = MathUtil.applyDeadband(yMove, 0.01);
+        if (m_tyPID.atSetpoint()) {
+          xMove=0;
+        }
         SmartDashboard.putNumber("AlignToReef tx error", m_txPID.getPositionError());
         SmartDashboard.putNumber("AlignToReef ty error", m_tyPID.getPositionError());
+        SmartDashboard.putNumber("AlignToReef xFeedForward", xFeedForward);
+        SmartDashboard.putNumber("AlignToReef yFeedForward", yFeedForward);
         SmartDashboard.putNumber("AlignToReef xMove", xMove);
         SmartDashboard.putNumber("AlignToReef yMove", yMove);
+        SmartDashboard.putBoolean("AlignToReef isFarAway", true);
+        return swerveAlign
+          .withVelocityX(xMove)
+          .withVelocityY(yMove)
+          .withTargetDirection(Rotation2d.fromDegrees(0));
+      }).until(m_tyPID::atSetpoint),
+      Commands.runOnce(() -> {
+        m_txPID.setP(0.1);
+        m_txPID.setI(0);
+        m_txPID.setD(0.002);
+        m_txPID.setTolerance(0.6);
+
+        m_tyPID.setP(0.2);
+        m_tyPID.setI(0);
+        m_tyPID.setD(0);
+        m_tyPID.setTolerance(0.6);
+
+
+      }),
+      drive.applyRequest(() -> {
+        // double xMove = MathUtil.clamp(
+        //   m_tyPID.calculate(LimelightHelpers.getTY(kLimelight), 0), -0.2,0.5
+        // );
+        double yMove = MathUtil.clamp(
+          m_txPID.calculate(LimelightHelpers.getTX(kLimelight), 0), -0.2,0.5
+        );
+        double xMove = 0;
+        //yMove = 0.11;
+        // xMove += xFeedForward;
+        // yMove += yFeedForward;
+        // xMove = MathUtil.applyDeadband(xMove, 0.01);
+        // yMove = MathUtil.applyDeadband(yMove, 0.01);
+        SmartDashboard.putNumber("AlignToReef tx error", m_txPID.getPositionError());
+        SmartDashboard.putNumber("AlignToReef ty error", m_tyPID.getPositionError());
+        SmartDashboard.putNumber("AlignToReef xFeedForward", xFeedForward);
+        SmartDashboard.putNumber("AlignToReef yFeedForward", yFeedForward);
+        SmartDashboard.putNumber("AlignToReef xMove", xMove);
+        SmartDashboard.putNumber("AlignToReef yMove", yMove);
+         SmartDashboard.putBoolean("AlignToReef isFarAway", false);
         
         return swerveAlign
           .withVelocityX(xMove)
           .withVelocityY(yMove)
           .withTargetDirection(Rotation2d.fromDegrees(0));
       })
+
     );
   }
 }
