@@ -24,7 +24,7 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class Aligntoreef extends SequentialCommandGroup {
-  private final static String kLimelight = "limelight-left";
+  private final static String kLimelight = "limelight-right";
   private final PIDController m_txPID = new PIDController(0.2, 0, 0.002);
   private final PIDController m_tyPID = new PIDController(0.2, 0, 0);
   private double xFeedForward;
@@ -70,67 +70,19 @@ public class Aligntoreef extends SequentialCommandGroup {
         } 
 
         int tagID = (int) LimelightHelpers.getFiducialID(kLimelight);
-        // if (tagID == 7) {
-        //   heading = 180;
-        // }
-        
-        // if (tagID == 18) {
-        //   heading = 0;
-        // }        
-        
-        // if (tagID == 10) {
-        //   heading = 0;
-        // }
 
-        // if (tagID == 21) {
-        //   heading = 180;
-        // }
-        
-        // if (tagID == 17) {
-        //   heading = 60;
-        // }
-        
-        // if (tagID == 19) {
-        //   heading = 300;
-        // }
-
-        // if (tagID == 22) {
-        //   heading = 120;
-        // }
-
-        // if (tagID == 20) {
-        //   heading = 240;
-        // }
-
-        // if (tagID == 11) {
-        //   heading = 60;
-        // }
-        
-        // if (tagID == 9) {
-        //   heading = 300;
-        // }
-
-        // if (tagID == 6) {
-        //   heading = 120;
-        // }
-
-        // if (tagID == 8) {
-        //   heading = 240;
-        // }
 
         switch (tagID) {
-          case 7: heading = 180; break;
-          case 21: heading = 180; break;
           case 10: heading = 0; break;
           case 18: heading = 0; break;
           case 11: heading = 60; break;
           case 17: heading = 60; break;
+          case 7: heading = 180; break;
+          case 21: heading = 180; break;
           case 8: heading = 240; break;
           case 20: heading = 240; break;
           case 9: heading = 300; break;
           case 19: heading = 300; break;
-
-
 
           default:
             // This is a tag that we can't handle! OH NO
