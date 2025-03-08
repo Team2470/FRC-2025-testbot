@@ -3,6 +3,8 @@ package com.ctre.pheonix6.swerve;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+import java.lang.annotation.Target;
+
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
@@ -14,6 +16,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * Drives the swerve drivetrain in a robot-centric manner, maintaining a
@@ -116,11 +119,19 @@ public class ModifiedRobotCentricFacingAngle implements SwerveRequest {
         }
 
         public StatusCode apply(SwerveControlParameters parameters, SwerveModule<?, ?, ?>... modulesToApply) {
+            SmartDashboard.putNumber("MRCFA AngleToFace (Degrees)", TargetDirection.getDegrees());
+            SmartDashboard.putString("MRCFA ForwardPersective", ForwardPerspective.toString());
+            SmartDashboard.putNumber("MRCFA parameters.operatorForwardDirection (Degrees)", parameters.operatorForwardDirection.getDegrees());
             Rotation2d angleToFace = TargetDirection;
             if (ForwardPerspective == ForwardPerspectiveValue.OperatorPerspective) {
                 /* If we're operator perspective, rotate the direction we want to face by the angle */
                 angleToFace = angleToFace.rotateBy(parameters.operatorForwardDirection);
             }
+            SmartDashboard.putNumber("MRCFA AngleToFace adjusted (Degrees)", angleToFace.getDegrees());
+
+            SmartDashboard.putNumber("MRCFA TargetRateFeedforward", TargetRateFeedforward);
+            SmartDashboard.putNumber("MRCFA Parameters.CurrentPose.Rotation (Degrees)", parameters.currentPose.getRotation().getDegrees());
+
 
             double toApplyOmega = TargetRateFeedforward +
                 HeadingController.calculate(
@@ -128,6 +139,10 @@ public class ModifiedRobotCentricFacingAngle implements SwerveRequest {
                     angleToFace.getRadians(),
                     parameters.timestamp
                 );
+            SmartDashboard.putNumber("AlignToReef Heading Measurement", parameters.currentPose.getRotation().getRadians());
+            SmartDashboard.putNumber("AlignToReef Heading Error", HeadingController.getPositionError());
+            SmartDashboard.putNumber("AlignToReef Heading Setpoint", HeadingController.getSetpoint());        
+            SmartDashboard.putNumber("MRCFA toApplyOmega", toApplyOmega);
             if (MaxAbsRotationalRate > 0.0) {
                 if (toApplyOmega > MaxAbsRotationalRate) {
                     toApplyOmega = MaxAbsRotationalRate;
@@ -135,6 +150,7 @@ public class ModifiedRobotCentricFacingAngle implements SwerveRequest {
                     toApplyOmega = -MaxAbsRotationalRate;
                 }
             }
+            SmartDashboard.putNumber("MRCFA toApplyOmega adjusted", toApplyOmega);
 
             return m_robotCentric
                 .withVelocityX(VelocityX)
