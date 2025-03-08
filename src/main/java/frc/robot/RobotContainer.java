@@ -253,7 +253,7 @@ public class RobotContainer {
     // Reset the field-centric heading on start press
     joystick.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-    joystick.y().whileTrue(new Aligntoreef(drivetrain));
+    joystick.y().whileTrue(new Aligntoreef(drivetrain, Aligntoreef.Side.Left, Aligntoreef.Score.Coral));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
