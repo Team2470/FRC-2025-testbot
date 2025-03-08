@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
+import com.ctre.pheonix6.swerve.ModifiedRobotCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.MathUtil;
@@ -48,7 +49,7 @@ public class Aligntoreef extends SequentialCommandGroup {
   private double yFeedForward;
   private double heading;
 
-  final SwerveRequest.RobotCentricFacingAngle swerveAlign = new SwerveRequest.RobotCentricFacingAngle()
+  final ModifiedRobotCentricFacingAngle swerveAlign = new ModifiedRobotCentricFacingAngle()
     .withHeadingPID(10, 0, 0)
     .withRotationalDeadband(RobotContainer.MaxAngularRate * 0.1) // Add a 10% deadband
     .withDriveRequestType(DriveRequestType.OpenLoopVoltage) // Use open-loop control for drive motors
@@ -99,7 +100,7 @@ public class Aligntoreef extends SequentialCommandGroup {
           case 17: heading = 60; break;
           case 7: heading = 180; break;
           case 21: heading = 180; break;
-          case 8: heading = 240; break;
+          case 8: heading = 60; break;
           case 20: heading = 240; break;
           case 9: heading = 300; break;
           case 19: heading = 300; break;
@@ -125,8 +126,10 @@ public class Aligntoreef extends SequentialCommandGroup {
         if (m_tyPID.atSetpoint()) {
           xMove=0;
         }
-        SmartDashboard.putNumber("AlignToReef tx error", m_txPID.getPositionError());
-        SmartDashboard.putNumber("AlignToReef ty error", m_tyPID.getPositionError());
+        SmartDashboard.putNumber("AlignToReef Heading Error", swerveAlign.HeadingController.getPositionError());
+        SmartDashboard.putNumber("AlignToReef Heading Setpoint", swerveAlign.HeadingController.getSetpoint());
+        SmartDashboard.putNumber("AlignToReef tx error", m_txPID.getError());
+        SmartDashboard.putNumber("AlignToReef ty error", m_tyPID.getError());
         SmartDashboard.putNumber("AlignToReef xFeedForward", xFeedForward);
         SmartDashboard.putNumber("AlignToReef yFeedForward", yFeedForward);
         SmartDashboard.putNumber("AlignToReef xMove", xMove);
@@ -163,8 +166,10 @@ public class Aligntoreef extends SequentialCommandGroup {
         // yMove += yFeedForward;
         // xMove = MathUtil.applyDeadband(xMove, 0.01);
         // yMove = MathUtil.applyDeadband(yMove, 0.01);
-        SmartDashboard.putNumber("AlignToReef tx error", m_txPID.getPositionError());
-        SmartDashboard.putNumber("AlignToReef ty error", m_tyPID.getPositionError());
+        SmartDashboard.putNumber("AlignToReef Heading Error", swerveAlign.HeadingController.getPositionError());
+        SmartDashboard.putNumber("AlignToReef Heading Setpoint", swerveAlign.HeadingController.getSetpoint());
+        SmartDashboard.putNumber("AlignToReef tx error", m_txPID.getError());
+        SmartDashboard.putNumber("AlignToReef ty error", m_tyPID.getError());
         SmartDashboard.putNumber("AlignToReef xFeedForward", xFeedForward);
         SmartDashboard.putNumber("AlignToReef yFeedForward", yFeedForward);
         SmartDashboard.putNumber("AlignToReef xMove", xMove);
